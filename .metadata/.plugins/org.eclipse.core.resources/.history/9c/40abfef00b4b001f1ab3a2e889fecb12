@@ -1,0 +1,10 @@
+server:
+  port: 8084
+
+eureka:
+ client:
+   service-url:
+     defaultzone: http://localhost:8084/eureka
+   fetch-registry: false
+   resigter-with-eureka: false
+	

@@ -1,0 +1,5 @@
+package com.dev2prod.shoppingCart.entity;
+
+public class CartEntity {
+
+}

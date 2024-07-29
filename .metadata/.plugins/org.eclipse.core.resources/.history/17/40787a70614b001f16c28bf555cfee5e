@@ -1,0 +1,17 @@
+spring.application.name=product-service
+
+server.port=3033
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/biswa
+spring.datasource.username=postgres
+spring.datasource.password=
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+#jpa related properties
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect
+
+eureka.client.service-url.defaultZone=http://localhost:3033/eureka/
+eureka.instance.prefer-ip-address=true
+eureka.instance.hostname=localhost

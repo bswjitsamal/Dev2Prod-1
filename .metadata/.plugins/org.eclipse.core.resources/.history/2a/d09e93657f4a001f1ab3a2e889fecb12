@@ -1,0 +1,106 @@
+package com.dev2prod.shoppingCart.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.dev2prod.shoppingCart.entity.CartEntity;
+import com.dev2prod.shoppingCart.model.Product;
+import com.dev2prod.shoppingCart.model.ShoppingCartRequest;
+import com.dev2prod.shoppingCart.model.ShoppingCartResponse;
+import com.dev2prod.shoppingCart.repo.CartRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Service
+public class ShoppingCartService {
+	
+	@Autowired
+	private WebClient.Builder webBuilder;
+	@Autowired
+	CartRepository cartRepo;
+
+	public ShoppingCartResponse processAddRequest(Long userId, List<ShoppingCartRequest> shoppingCartRequestLst) {
+		//call product-service
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		String productServiceURL = "http://localhost:3031/products/getProducts"+shoppingCartRequestLst.stream().map(e->String.valueOf(e.getProductId())).collect(Collectors.joining(","));
+		
+		List<Product> productServiceList = webBuilder.build()
+				.get()
+				.uri("")
+				.retrieve()
+				.bodyToFlux(Product.class)
+				.collectList()
+				.block();
+		
+		//calculate total cost
+		final Double[] totalCost= {0.0}; 
+ 		
+		productServiceList.forEach(pls->{
+			shoppingCartRequestLst.forEach(scr->{
+				if(pls.getProductId() == scr.getProductId()) {
+					pls.setQuantity(scr.getQuantity());
+					totalCost[0] = totalCost[0]+pls.getAmount()*scr.getQuantity();
+				}
+			});	
+		});
+		
+		//create cart Entity
+		
+		CartEntity cartEntity =null;
+				
+		try {
+			 cartEntity = CartEntity.builder()
+					.userId(userId)
+					.cartId((long)(Math.random()*Math.pow(10, 10)))
+					.totalItem(productServiceList.size())
+					.totalCost(totalCost[0])
+					.products(mapper.writeValueAsString(productServiceList))
+					.build();
+		} catch (JsonProcessingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+				
+		//save cart entity
+		cartRepo.save(cartEntity);
+		
+		//create API response
+		ShoppingCartResponse response = ShoppingCartResponse.builder()
+				.cartId(cartEntity.getCartId())
+				.userId(cartEntity.getUserId())
+				.totalCost(cartEntity.getTotalCost())
+				.product(productServiceList)
+				.build();
+		
+		return response;
+	}
+
+	public List<ShoppingCartResponse> getShoppingCart(Long userId) {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		
+		List<CartEntity> cartEntities =  cartRepo.findByUserId(userId);
+		List<ShoppingCartResponse> cartResponse = cartEntities.stream()
+				.map(ce->{
+					try {
+						return ShoppingCartResponse.builder()
+								.cartId(ce.getCartId())
+								.userId(ce.getUserId())
+								.totalItems(ce.getTotalItem())
+								.totalCost(ce.getTotalCost())
+								.product(mapper.readValue(ce.getProducts(), List.class))
+								.build();
+					}catch(JsonProcessingException e){
+						throw new RuntimeException();
+					}
+				}).collect(Collectors.toList());
+		return cartResponse;
+	}
+
+}

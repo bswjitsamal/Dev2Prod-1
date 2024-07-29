@@ -1,0 +1,38 @@
+package com.dev2prod.shoppingCart.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.dev2prod.shoppingCart.model.Product;
+import com.dev2prod.shoppingCart.model.ShoppingCartRequest;
+import com.dev2prod.shoppingCart.model.ShoppingCartResponse;
+
+@Service
+public class ShoppingCartService {
+	
+	@Autowired
+	private WebClient.Builder webBuilder;
+
+	public ShoppingCartResponse processAddRequest(Long userId, List<ShoppingCartRequest> shoppingCartRequestLst) {
+		//call product-service
+		
+		String productServiceURL = "http://localhost:3031/products/getProducts"+
+		
+		List<Product> productServiceList = webBuilder.build()
+				.get()
+				.uri("")
+				.retrieve()
+				.bodyToFlux(Product.class)
+				.collectList()
+				.block();
+		
+		//calculate total cost
+		//create cart Entity
+		//save cart entity
+		//create API response
+	}
+
+}

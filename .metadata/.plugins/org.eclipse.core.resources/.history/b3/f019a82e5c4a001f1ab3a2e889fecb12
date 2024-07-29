@@ -1,0 +1,8 @@
+package com.dev2prod.shoppingCart.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class ShoppingCartService {
+
+}
